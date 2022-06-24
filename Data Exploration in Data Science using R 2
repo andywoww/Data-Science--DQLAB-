@@ -1,0 +1,147 @@
+--------------- Konsolidasi Data
+library(openxlsx)
+
+#Membaca tiap file staging Excel dan menyimpannya dalam variable bernama awalan staging 
+staging.nama <- read.xlsx("staging.nama.xlsx")
+staging.no_telepon <- read.xlsx("staging.no_telepon.xlsx")
+staging.kode_pos <- read.xlsx("staging.kode_pos.xlsx")
+staging.alamat <- read.xlsx("staging.alamat.xlsx")
+staging.aktif <- read.xlsx("staging.aktif.xlsx")
+
+#Menggabungkan variable staging dengan function merge
+staging.teks <- merge(x=staging.nama, y=staging.no_telepon, by.x = "kode_pelanggan", by.y = "kode_pelanggan", all = TRUE)
+staging.teks <- merge(x=staging.teks, y=staging.kode_pos, by.x = "kode_pelanggan", by.y = "kode_pelanggan", all = TRUE)
+staging.teks <- merge(x=staging.teks, y=staging.alamat, by.x = "kode_pelanggan", by.y = "kode_pelanggan", all = TRUE)
+staging.teks <- merge(x=staging.teks, y=staging.aktif, by.x = "kode_pelanggan", by.y = "kode_pelanggan", all = TRUE)
+staging.teks <- staging.teks[c("kode_pelanggan","nama", "alamat", "no_telepon", "anomali_no_telepon", "kode_pos")]
+write.xlsx(file="staging.teks.xlsx", staging.teks)
+
+
+------------------ Identifikasi awal kolom Tanggal Lahir
+library(RMySQL)
+
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+
+#Melakukan query data untuk format tanggal yang memiliki huruf dengan regex [A-Za-z]
+sql <- "SELECT tanggal_lahir from dqlab_messy_data where tanggal_lahir REGEXP '[A-Za-z]'"
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+data.pelanggan <- fetch(rs, n=-1)
+dbClearResult(rs)
+
+# Menghapus karakter digit dan spasi dengan function gsub dan pola regex [0-9 ].
+data.pelanggan$tanggal_lahir <- gsub('[0-9 ]','', data.pelanggan$tanggal_lahir)
+
+#Melakukan grouping nama bulan dengan function unique
+unique(data.pelanggan$tanggal_lahir)
+
+#Menutup seluruh koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons)
+    + dbDisconnect(con)
+
+---------------- Ganti tanggal lahir pelanggan
+library(RMySQL)
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+
+#Melakukan query untuk data yang mengandung huruf alfabet
+sql <- "select tanggal_lahir from dqlab_messy_data where tanggal_lahir regexp '[a-z]'"
+
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+data.pelanggan <- fetch(rs, n=-1)
+dbClearResult(rs)
+#Menghilangkan spasi
+data.pelanggan$tanggal_lahir <- gsub(" ","", data.pelanggan$tanggal_lahir)
+
+#Melakukan standarisasi nama bulan ke angka bulan
+data.pelanggan$tanggal_lahir <-gsub("Januari","-01-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("Februari","-02-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("Maret","-03-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("April","-04-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("Mei","-05-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("Juni","-06-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("Juli","-07-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("Agustus","-08-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("September","-09-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("November","-10-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("November","-11-",data.pelanggan$tanggal_lahir)
+data.pelanggan$tanggal_lahir <- gsub("Desember","-12-",data.pelanggan$tanggal_lahir)
+data.pelanggan
+
+#Menutup seluruh koneksi MySQL
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons)
+    + dbDisconnect(con)
+
+--------------- Melakukan Standarisasi Format dd-MM-yyyy
+library(RMySQL)
+library(reshape2)
+
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+#Mengambil data yang memiliki tanda garis miring /
+sql <- "select tanggal_lahir from dqlab_messy_data where tanggal_lahir like '%/%'"
+
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+data.pelanggan <- fetch(rs, n=-1)
+dbClearResult(rs)
+#Melakukan split dan menyimpannya ke variable tanggal.split dengan urutan bulan, hari dan tahun
+tanggal.split <-colsplit(data.pelanggan$tanggal_lahir,"/",c("bulan","hari","tahun"))
+
+#Menggabungkan kembali dalam urutan hari, bulan dan tahun dan menyimpannya kembali ke data.pelanggan$tanggal_lahir
+data.pelanggan$tanggal_lahir <-  paste(tanggal.split$hari, tanggal.split$bulan, tanggal.split$tahun, sep="-")
+data.pelanggan$tanggal_lahir 
+#Menutup seluruh koneksi MySQL
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons)
+    + dbDisconnect(con)
+
+------------------ Memperbaiki format tahun satu dan dua digit
+sapply(tanggal.split$tahun, function(x) if(x>=0 & x<10) 2000+x else if(x>=10 & x<100) 1900+x else x)
+
+------------------ Menggabungkan data standarisasi dengan rbind
+data.gabungan <- rbind(data.pelanggan1, data.pelanggan2)
+
+------------------ Menggunakan as.Date untuk pengecekan konversi keseluruhan
+  as.Date(data, format)
+================================== Materi 1 ======================================
+Menggunakan as.Date untuk melakukan konversi kolom tanggal_lahir dan menyimpannya kembali ke kolom tersebut 
+==================================================================================
+data.pelanggan$tanggal_lahir <- as.Date(data.pelanggan$tanggal_lahir, "%d-%m-%Y")
+
+================================== Materi 2 ======================================
+Menggunakan as.Date untuk melakukan konversi kolom tanggal_lahir dan menyimpannya kembali ke kolom tersebut 
+==================================================================================
+data.pelanggan$tanggal_lahir <- format(as.Date(data.pelanggan$tanggal_lahir, "%d-%m-%Y"),"%d-%m-%Y")
+
+------------------- Mengidentifikasi Tanggal Lahir Tidak Logis
+difftime(tanggal_referensi , data.pelanggan$tanggal_lahir , units = "days")
+
+library(openxlsx)
+data.pelanggan <- read.xlsx("staging_tanggal_lahir2.xlsx")
+
+#Membaca data tanggal_lahir sebagai tipe data Date
+data.pelanggan$tanggal_lahir <- as.Date(data.pelanggan$tanggal_lahir, "%d-%m-%Y")
+
+#Set tanggal referensi ke 27 April 2018
+tanggal_referensi <- as.Date("27-4-2018", "%d-%m-%Y")
+
+#Menghitung perbedaan tanggal dalam tahun
+data.pelanggan$umur <- as.numeric(difftime(tanggal_referensi , data.pelanggan$tanggal_lahir , units = "days"))/365
+
+#Pengecekan umur maksimal 80 tahun
+data.pelanggan$umur_valid <- data.pelanggan$umur <= 80 
+
+#Format ulang tanggal lahir
+data.pelanggan$tanggal_lahir <- format(data.pelanggan$tanggal_lahir, "%d-%m-%Y")
+
+#Menampilkan data.pelanggan
+data.pelanggan
+
+#Menulis hasil ke file staging_tanggal_lahir3.xlsx
+write.xlsx(data.pelanggan, file="staging_tanggal_lahir3.xlsx")
+

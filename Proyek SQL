@@ -1,0 +1,57 @@
+--------------- Pelanggan Bergelar
+SELECT * from ms_pelanggan where nama_pelanggan like '%S.H%' or nama_pelanggan like '%Drs.%' or nama_pelanggan like '%Ir.%';
+
+---------------- Mengurutkan Nama
+SELECT nama_pelanggan from ms_pelanggan ORDER BY nama_pelanggan ASC;
+------------------- Nama Tanpa Gelar
+SELECT nama_pelanggan FROM ms_pelanggan
+ORDER BY
+REPLACE(nama_pelanggan,'Ir.','Agus Nugroho')ASC
+
+------------------ Nama Pelanggan Paling Panjang
+select nama_pelanggan from ms_pelanggan where length(nama_pelanggan)=(select max(length(nama_pelanggan)) from ms_pelanggan);
+------------------ Nama Yang Paling Panjang Dengan Gelar
+select nama_pelanggan from ms_pelanggan where length(nama_pelanggan) =(select max(length(nama_pelanggan)) from ms_pelanggan) union select nama_pelanggan from ms_pelanggan where length(nama_pelanggan) = (select min(length(nama_pelanggan)) from ms_pelanggan)
+
+
+order by length(replace(replace(replace(nama_pelanggan,'Ir.',''),'Drs.',''),'S.H.',''))desc
+
+
+select replace(replace(replace(nama_pelanggan,'Ir.',''),'Drs.',''),'S.H.','')nama_pelanggan, length(replace(replace(replace(nama_pelanggan,'Ir.',''),'Drs.',''),'S.H.','')) Jumlah from ms_pelanggan where
+length(nama_pelanggan) =(select max(length(nama_pelanggan)) from ms_pelanggan) 
+
+------------------ INNER JOIN
+select ms_produk.kode_produk, nama_produk,qty from ms_produk inner join tr_penjualan_detail on ms_produk.kode_produk = tr_penjualan_detail.kode_produk
+
+---------------- Kuantitas Produk Yang Banyak Terjual
+select a.kode_produk,b.nama_produk,sum(a.qty) as total_qty from tr_penjualan_detail a join ms_produk b on a.kode_produk = b.kode_produk group by a.kode_produk,b.nama_produk order by total_qty desc limit 2
+
+---------------- Pelanggan Paling tinggi nilai belanjanya
+select tp.kode_pelanggan,mp.nama_pelanggan,sum(tpd.qty * tpd.harga_satuan) total_harga
+from tr_penjualan tp
+join ms_pelanggan mp
+using(kode_pelanggan)
+join tr_penjualan_detail tpd
+using(kode_transaksi)
+group by mp.kode_pelanggan,mp.nama_pelanggan 
+order by total_harga desc
+limit 1;
+
+---------------- Pelanggan yang belum pernah belanja null
+select MP.kode_pelanggan, MP.nama_pelanggan, MP.alamat
+from ms_pelanggan MP
+left join tr_penjualan TP
+on MP.kode_pelanggan = TP.kode_pelanggan
+where TP.kode_pelanggan IS NULL
+
+----------------- Transaksi belanja lebih dari 1
+select tp.kode_transaksi,mp.kode_pelanggan,mp.nama_pelanggan,tp.tanggal_transaksi,count(tpd.qty) jumlah_detail 
+from ms_pelanggan mp
+left join tr_penjualan tp
+using(kode_pelanggan)
+join tr_penjualan_detail tpd
+using(kode_transaksi)
+group by tp.kode_transaksi, mp.kode_pelanggan, mp.nama_pelanggan, tp.tanggal_transaksi
+having count(tpd.qty) > 1;
+
+

@@ -1,0 +1,42 @@
+=================== #Menggunakan inspect terhadap transaksi
+inspect(transaksi)
+
+=================== Menghasilkan Rules dengan Apriori
+apriori(transaksi)
+
+library(arules)
+transaksi <- read.transactions(file="https://academy.dqlab.id/dataset/data_transaksi.txt", format="single", sep="\t", cols=c(1,2), skip=1)
+
+#Menghasilkan association rules dan disimpan sebagai variable mba
+mba <- apriori(transaksi)
+
+#Melihat isi dari rules dengan menggunakan fungsi inspect
+inspect(mba)
+
+#Filter rhs dengan item "Sirup" dan tampilkan
+inspect(subset(mba,rhs %in% "Sirup"))
+
+inspect(subset(mba, lhs %in% "Gula"))
+
+inspect(subset(mba, lhs %in% "Pet Food" & rhs %in% "Sirup"))
+
+#atau
+
+inspect(subset(mba, lhs %in% "Teh Celup" | rhs %in% "Teh Celup"))
+
+------------------ Menghasilkan Rules dengan Parameter Support dan Confidence
+library(arules)
+transaksi <- read.transactions(file="https://academy.dqlab.id/dataset/data_transaksi.txt", format="single", sep="\t", cols=c(1,2), skip=1)
+apriori(transaksi,parameter = list(supp = 0.1, confidence = 0.5))
+
+----------------- Filter Berdasarkan Lift
+library(arules)
+transaksi <- read.transactions(file="https://academy.dqlab.id/dataset/data_transaksi.txt", format="single", sep="\t", cols=c(1,2), skip=1)
+mba <- apriori(transaksi,parameter = list(supp = 0.1, confidence = 0.5))
+inspect(subset(mba,( lhs %in% "Teh Celup" | rhs %in% "Teh Celup")& lift>1))
+
+------------------ Rekomendasi - Filter dengan %ain%
+inspect(subset(mba,(lhs %ain% c("Pet Food","Gula"))))
+
+------------------- Visualisasi Rules dengan Graph
+plot(subset(mba, lift>1.1), method="graph")

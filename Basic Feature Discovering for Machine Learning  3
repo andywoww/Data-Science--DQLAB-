@@ -1,0 +1,94 @@
+-------------------- Modelling dengan hasil Feature Engineering - Part 1
+df_train = df_all.loc[:890]
+df_test = df_all.loc[891:]
+dfs = [df_train, df_test]
+
+non_numeric_features = ['Embarked', 'Sex', 'Title', 'Family_Size_Grouped', 'Age', 'Fare']
+
+for df in dfs:
+    for feature in non_numeric_features:        
+        df[feature] = LabelEncoder().fit_transform(df[feature])
+        
+cat_features = ['Pclass', 'Sex', 'Embarked', 'Title', 'Family_Size_Grouped']
+encoded_features = []
+
+for df in dfs:
+    for feature in cat_features:
+        encoded_feat = OneHotEncoder().fit_transform(df[feature].values.reshape(-1, 1)).toarray()
+        n = df[feature].nunique()
+        cols = ['{}_{}'.format(feature, n) for n in range(1, n + 1)]
+        encoded_df = pd.DataFrame(encoded_feat, columns=cols)
+        encoded_df.index = df.index
+        encoded_features.append(encoded_df)
+
+df_train = pd.concat([df_train, *encoded_features[:5]], axis=1)
+df_test = pd.concat([df_test, *encoded_features[5:]], axis=1)
+
+------------------ Modelling dengan hasil Feature Engineering - Part 2
+df_all = concat_df(df_train, df_test)
+drop_cols = ['Cabin', 'Embarked', 'Survived', 'Name', 'PassengerId', 'Pclass', 'Sex', 'Ticket', 'Title']
+
+df_all.drop(columns=drop_cols, inplace=True)
+
+df_all.head()
+
+------------------ Modelling dengan hasil Feature Engineering - Part 3
+X_train = StandardScaler().fit_transform(df_train.drop(columns=drop_cols))
+y_train = df_train['Survived'].values
+X_test = StandardScaler().fit_transform(df_test.drop(columns=drop_cols))
+
+print('X_train shape: {}'.format(X_train.shape))
+print('y_train shape: {}'.format(y_train.shape))
+print('X_test shape: {}'.format(X_test.shape))
+
+------------------ Modelling dengan hasil Feature Engineering - Part 4
+random_forest = RandomForestClassifier(criterion='gini', 
+                                           n_estimators=1100,
+                                           max_depth=5,
+                                           min_samples_split=4,
+                                           min_samples_leaf=5,
+                                           max_features='auto',
+                                           oob_score=True,
+                                           random_state=50)
+random_forest.fit(X_train, y_train)
+from sklearn.model_selection import cross_val_score
+scores = cross_val_score(random_forest, X_train, y_train, cv=10, scoring = "accuracy")
+print("Scores:", scores)
+print("Mean:", scores.mean())
+print("Standard Deviation:", scores.std())
+
+
+---------------------- Modelling tanpa hasil Feature Engineering - Part 1
+df_all = concat_df(df_train, df_test)
+drop_cols = ['Cabin', 'Embarked', 'Family_Size', 'Family_Size_Grouped', 'Survived',
+             'Name', 'PassengerId', 'Pclass', 'Sex', 'Ticket', 'Title',
+             'Family_Size_Grouped_1', 'Family_Size_Grouped_2', 'Family_Size_Grouped_3', 'Family_Size_Grouped_4',
+             'Ticket_Frequency', 'Title_1', 'Title_2', 'Title_3', 'Title_4', 'Is_Married']
+
+df_all.drop(columns=drop_cols, inplace=True)
+
+df_all.head()				
+
+X_train = StandardScaler().fit_transform(df_train.drop(columns=drop_cols))
+y_train = df_train['Survived'].values
+X_test = StandardScaler().fit_transform(df_test.drop(columns=drop_cols))
+
+print('X_train shape: {}'.format(X_train.shape))
+print('y_train shape: {}'.format(y_train.shape))
+print('X_test shape: {}'.format(X_test.shape))
+
+------------------------- Modelling tanpa hasil Feature Engineering - Part 2
+random_forest = RandomForestClassifier(criterion='gini', 
+                                           n_estimators=1100,
+                                           max_depth=5,
+                                           min_samples_split=4,
+                                           min_samples_leaf=5,
+                                           max_features='auto',
+                                           oob_score=True,
+                                           random_state=50)
+random_forest.fit(X_train, y_train)
+from sklearn.model_selection import cross_val_score
+scores = cross_val_score(random_forest, X_train, y_train, cv=10, scoring = "accuracy")
+print("Scores:", scores)
+print("Mean:", scores.mean())
+print("Standard Deviation:", scores.std())

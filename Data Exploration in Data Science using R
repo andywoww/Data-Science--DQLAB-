@@ -1,0 +1,378 @@
+------------- menggunakan function basic_pattern_analysis
+library(openxlsx)
+library(bpa)
+
+#Membaca dataset pelanggan
+data.pelanggan <- read.xlsx("https://academy.dqlab.id/dataset/dqlab_messy_data_pelanggan.xlsx",
+                            sheet="Pelanggan")
+
+#Menggunakan function basic_pattern_analysis
+basic_pattern_analysis(x="DQLAB")
+basic_pattern_analysis(x="17 Agustus 1945")
+basic_pattern_analysis(x=3.14)
+
+---------------------- Profiling terhadap vector
+library(openxlsx)
+library(bpa)
+
+#Membaca dataset pelanggan
+data.pelanggan <- read.xlsx("https://academy.dqlab.id/dataset/dqlab_messy_data_pelanggan.xlsx",
+                            sheet="Pelanggan")
+
+#Menggunakan function basic_pattern_analysis
+basic_pattern_analysis(c("KD-008","012345","KD-010"))
+
+------------------ Menggunakan parameter unique_only=TRUE
+library(openxlsx)
+library(bpa)
+
+#Membaca dataset pelanggan
+data.pelanggan <- read.xlsx("https://academy.dqlab.id/dataset/dqlab_messy_data_pelanggan.xlsx",
+                            sheet="Pelanggan")
+
+#Menggunakan function basic_pattern_analysis
+basic_pattern_analysis(c("KD-008","012345","KD-010"),unique_only = TRUE)
+
+------------ Profiling terhadap kolom Kode Pelanggan
+library(openxlsx)
+library(bpa)
+
+#Membaca dataset pelanggan
+data.pelanggan <- read.xlsx("https://academy.dqlab.id/dataset/dqlab_messy_data_pelanggan.xlsx",
+                            sheet="Pelanggan")
+
+#Menggunakan function basic_pattern_analysis pada kolom Kode.Pelanggan
+basic_pattern_analysis(data.pelanggan$Kode.Pelanggan, unique_only=TRUE)
+
+--------------- Filter Data dengan pola anomali
+library(openxlsx)
+library(bpa)
+
+#Membaca dataset pelanggan
+data.pelanggan <- read.xlsx("https://academy.dqlab.id/dataset/dqlab_messy_data_pelanggan.xlsx",
+                            sheet="Pelanggan")
+
+#Mengambil dataset yang memiliki pola teks "AA-9999" di kolom Kode.Pelanggan
+data.pelanggan[basic_pattern_analysis(data.pelanggan$Kode.Pelanggan)=="AA-9999",]
+
+
+----------------------- Perkenalan function grepl
+#Pengenalan Pola
+grepl(pattern="[a]", x="pelanggan")
+grepl(pattern="[^a]", x="pelanggan")
+grepl(pattern="[bc]", x="pelanggan")
+grepl(pattern="[^bc]", x="pelanggan")
+grepl(pattern="[s]", x="pelanggan")
+grepl(pattern="[^s]", x="pelanggan")
+grepl(pattern="aa", x="pelanggan")
+
+------------- Menemukan nama yang mengandung karakter tidak lazim
+library(openxlsx)
+library(bpa)
+
+#Membaca dataset pelanggan
+data.pelanggan <- read.xlsx("https://academy.dqlab.id/dataset/dqlab_messy_data_pelanggan.xlsx", sheet="Pelanggan")
+#Menggunakan function grepl untuk mengambil pola nama tidak lazim
+data.pelanggan[grepl(pattern="[^Aaw.,]",x=basic_pattern_analysis(data.pelanggan$Nama)),]
+data.pelanggan[grepl(pattern="ww", x=basic_pattern_analysis(data.pelanggan$Nama)),]
+
+-------------------Menggabungkan hasil profiling ke dalam dataset awal
+library(openxlsx)
+library(bpa)
+
+#Membaca dataset pelanggan
+data.pelanggan <- read.xlsx("https://academy.dqlab.id/dataset/dqlab_messy_data_pelanggan.xlsx", sheet="Pelanggan")
+
+#Melakukan profiling terhadap seluruh kolom data.pelanggan 
+pola.data.pelanggan <- basic_pattern_analysis(data.pelanggan)
+
+#Merubah nama kolom
+names(pola.data.pelanggan)<-paste("Pola",names(pola.data.pelanggan),sep=".")
+
+#Menggabungkan dua data.frame
+data.pelanggan <- cbind(data.pelanggan, pola.data.pelanggan)
+#Menampilkan struktur
+str(data.pelanggan)
+
+#Menulis File Excel
+write.xlsx(data.pelanggan, file="data.pelanggan.xlsx")
+
+SELECT kode_pelanggan, nama FROM dqlab_messy_data WHERE nama REGEXP '[qz]'
+
+------------------- Menghilangkan spasi tambahan
+library(RMySQL)
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+
+#Konstruksi SQL
+sql <- "SELECT kode_pelanggan, nama from dqlab_messy_data where nama REGEXP ' {2,}'"
+
+#Mengirimkan query
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data
+data.pelanggan <- fetch(rs, n=-1)
+data.pelanggan
+data.pelanggan$nama <- gsub(" {2,}", " ", data.pelanggan$nama)
+data.pelanggan$nama <- trimws(data.pelanggan$nama,which="both")
+data.pelanggan
+
+#Menutup Koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
+
+------------------- Menghilangkan angka dan simbol
+library(RMySQL)
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+
+#Konstruksi SQL
+sql <- "SELECT kode_pelanggan, nama from dqlab_messy_data where nama REGEXP '[^A-Za-z .,]'"
+
+#Mengirimkan query
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data
+data.pelanggan <- fetch(rs, n=-1)
+data.pelanggan
+data.pelanggan$nama <- gsub("[^A-Za-z .,]", "", data.pelanggan$nama)
+data.pelanggan$nama <- trimws(data.pelanggan$nama, which="both")
+data.pelanggan
+
+#Menutup Koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
+
+---------------- Menghilangkan kata panggilan dan perbaikan penulisan gelar
+library(RMySQL)
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+
+#Konstruksi SQL
+sql <- "SELECT kode_pelanggan, nama from dqlab_messy_data where nama like '%ibu%' or nama like '%bapak%'"
+
+#Mengirimkan query
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data
+data.pelanggan <- fetch(rs, n=-1)
+data.pelanggan
+data.pelanggan$nama <- gsub("[^A-Za-z .,]", "", data.pelanggan$nama)
+data.pelanggan$nama <- gsub("\\bbapak\\b", "",data.pelanggan$nama, ignore.case = TRUE)
+data.pelanggan$nama <- gsub("\\bibu\\b", "",data.pelanggan$nama, ignore.case = TRUE)
+data.pelanggan$nama <- gsub("\\bir\\b", "Ir",data.pelanggan$nama, ignore.case = TRUE)
+data.pelanggan$nama <- gsub("[ ]{2,}", " ", data.pelanggan$nama)
+data.pelanggan$nama <- trimws(data.pelanggan$nama, which="both")
+data.pelanggan
+
+#Menutup Koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
+
+------------ Konsolidasi Proses Cleansing
+library(openxlsx)
+library(RMySQL)
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+
+#Konstruksi SQL
+sql <- "SELECT kode_pelanggan, nama from dqlab_messy_data"
+
+#Mengirimkan query
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data
+data.pelanggan <- fetch(rs, n=-1)
+data.pelanggan$nama.before <- data.pelanggan$nama
+data.pelanggan$nama <- gsub("[^A-Za-z .,]", "", data.pelanggan$nama)
+data.pelanggan$nama <- gsub("\\bbapak\\b", "",data.pelanggan$nama, ignore.case = TRUE)
+data.pelanggan$nama <- gsub("\\bibu\\b", "",data.pelanggan$nama, ignore.case = TRUE)
+data.pelanggan$nama <- gsub("\\bir\\b", "Ir",data.pelanggan$nama, ignore.case = TRUE)
+data.pelanggan$nama <- gsub("[ ]{2,}", " ", data.pelanggan$nama)
+data.pelanggan$nama <- trimws(data.pelanggan$nama, which="both")
+write.xlsx(data.pelanggan, file="staging.nama.xlsx")
+
+#Menutup Koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
+
+
+---------------- Profiling Kolom No. Telepon
+#Konstruksi SQL
+sql <- "SELECT pola_no_telepon, length(pola_no_telepon) as panjang_text, count(*) as jumlah_data
+from dqlab_messy_data
+group by pola_no_telepon"
+
+---------------- Profiling kolom Nomor Telepon (3)
+library(RMySQL)
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+
+#Konstruksi SQL untuk Profil 1
+sql <- "SELECT left(no_telepon,1) as prefix_no_telepon, pola_no_telepon
+from dqlab_messy_data where pola_no_telepon = '999999999999999'
+group by left(no_telepon,1), pola_no_telepon"
+
+#Mengirimkan query untuk Profil 1
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data untuk Profil 1
+profil_no_telepon <- fetch(rs, n=-1)
+print(profil_no_telepon)
+
+#Clear resultset untuk Profil 1
+dbClearResult(rs)
+
+#Konstruksi SQL untuk Profil 2
+sql <- "SELECT left(no_telepon,2) as prefix_no_telepon, pola_no_telepon
+from dqlab_messy_data where pola_no_telepon = '9999999999999999'
+group by left(no_telepon,2), pola_no_telepon"
+
+#Mengirimkan query untuk Profil 2
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data untuk Profil 2
+profil_no_telepon <- fetch(rs, n=-1)
+print(profil_no_telepon)
+
+#Clear resultset untuk Profil 2
+dbClearResult(rs)
+
+#Konstruksi SQL untuk Profil 3
+sql <- "SELECT left(no_telepon,3) as prefix_no_telepon, pola_no_telepon
+from dqlab_messy_data where pola_no_telepon = '+9999999999999999'
+group by left(no_telepon,3), pola_no_telepon"
+
+#Mengirimkan query untuk Profil 3
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data untuk Profil 3
+profil_no_telepon <- fetch(rs, n=-1)
+print(profil_no_telepon)
+
+#Clear resultset untuk Profil 3
+dbClearResult(rs)
+
+#Menutup Koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
+
+
+------------------ Standarisasi No. Telpn
+library(RMySQL)
+library(openxlsx)
+
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+
+#Konstruksi SQL untuk Profil 1
+sql <- "select kode_pelanggan, no_telepon, pola_no_telepon from dqlab_messy_data"
+
+#Mengirimkan query untuk standarisasi no_telepon
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data untuk standarisasi no_telepon
+data.telepon <- fetch(rs, n=-1)
+data.telepon$anomali_no_telepon <- TRUE
+
+data.telepon[data.telepon$pola_no_telepon=="9999999999999999",]$no_telepon <- paste("+", data.telepon[data.telepon$pola_no_telepon=="9999999999999999",]$no_telepon, sep="")
+data.telepon[data.telepon$pola_no_telepon=="999999999999999",]$no_telepon <- gsub("^0","+62",  data.telepon[data.telepon$pola_no_telepon=="999999999999999",]$no_telepon)
+data.telepon[data.telepon$pola_no_telepon=="+9999999999999999",]$anomali_no_telepon <- FALSE 
+data.telepon[data.telepon$pola_no_telepon=="9999999999999999",]$anomali_no_telepon <- FALSE 
+data.telepon[data.telepon$pola_no_telepon=="999999999999999",]$anomali_no_telepon <- FALSE
+print(data.telepon)
+
+write.xlsx(file="staging.no_telepon.xlsx", x=data.telepon)
+
+#Clear resultset untuk standarisasi
+dbClearResult(rs)
+
+#Menutup Koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
+
+
+-------------- Standarisasi kolom Kode Pos (1)
+library(RMySQL)
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+#Konstruksi SQL
+sql <- "SELECT kode_pelanggan, kode_pos, pola_kode_pos from dqlab_messy_data where pola_kode_pos in ('99999A', '9999A9')"
+
+#Mengirimkan query
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data
+data_kode_pos <- fetch(rs, n=-1)
+
+#Merubah nilai O dan I
+data_kode_pos$kode_pos<-gsub("O","0",data_kode_pos$kode_pos)
+data_kode_pos$kode_pos<-gsub("I","1",data_kode_pos$kode_pos)
+print(data_kode_pos)
+
+#Clear resultset
+dbClearResult(rs)
+
+#Menutup Koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
+
+--
+library(RMySQL)
+library(openxlsx)
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+#Konstruksi SQL
+sql <- "SELECT kode_pelanggan, alamat from dqlab_messy_data"
+
+#Mengirimkan query
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+#Mengambil data
+data_alamat <- fetch(rs, n=-1)
+
+#Merubah singkatan jl, jln, jl. dan jln. menjadi Jalan
+data_alamat$alamat<- gsub("jln[ ]*\\.", "Jalan",data_alamat$alamat, ignore.case = TRUE)
+data_alamat$alamat<- gsub("\\bjln\\b", "Jalan",data_alamat$alamat, ignore.case = TRUE)
+data_alamat$alamat<- gsub("jl[ ]*\\.", "Jalan",data_alamat$alamat, ignore.case = TRUE)
+data_alamat$alamat<- gsub("\\bjl\\b", "Jalan",data_alamat$alamat, ignore.case = TRUE)
+data_alamat$alamat<- gsub("jalan\\.", "Jalan",data_alamat$alamat, ignore.case = TRUE)
+print(data_alamat)
+#Menulis data ke file
+write.xlsx(file="staging.alamat.xlsx", x= data_alamat)
+
+#Clear resultset
+dbClearResult(rs)
+
+#Menutup Koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
+
+------------ Profiling Pola Aktif
+library(RMySQL)
+#Membuka koneksi
+con <- dbConnect(MySQL(), user="demo", password="demo", host="mysqlhost",
+                 dbname="dqlabdatawrangling")
+
+#Konstruksi SQL
+sql <- "SELECT aktif,pola_aktif, count(*) as jumlah_data
+from dqlab_messy_data group by aktif, pola_aktif"
+
+#Mengirimkan query
+rs <- tryCatch(dbSendQuery(con, sql), finally = print("query ok"))
+
+#Mengambil data
+profil_aktif <- fetch(rs, n=-1)
+print(profil_aktif)
+
+#Menutup Koneksi
+all_cons <- dbListConnections(MySQL())
+for(con in all_cons) dbDisconnect(con)
+

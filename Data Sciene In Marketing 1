@@ -1,0 +1,74 @@
+-------------------- Membaca data dengan csv
+pelanggan <- read.csv("https://academy.dqlab.id/dataset/customer_segments.txt", sep="\t")
+pelanggan[c("Nama.Pelanggan","Jenis.Kelamin", "Umur", "Profesi","Tipe.Residen")]
+pelanggan[data]
+
+-------------------- Konversi Data dengan data.matrix
+pelanggan_matrix<-data.matrix(pelanggan[c("Jenis.Kelamin", "Profesi")])
+#Penggabungan data
+pelanggan <- data.frame(pelanggan,pelanggan_matrix)
+#Tampilkan kembali data hasil penggabungan
+pelanggan
+#Normalisasi Nilai
+pelanggan$NilaiBelanjaSetahun <- pelanggan$NilaiBelanjaSetahun/1000000
+
+#Mengisi data master
+Profesi <- unique(pelanggan[c("Profesi","Profesi.1")])
+Jenis.Kelamin <-unique(pelanggan[c("Jenis.Kelamin","Jenis.Kelamin.1")])
+Tipe.Residen <- unique(pelanggan[c("Tipe.Residen","Tipe.Residen.1")])
+
+----------------------- Algoritma K-Means
+field_yang_digunakan = c("Jenis.Kelamin.1", "Umur", "Profesi.1", "Tipe.Residen.1","NilaiBelanjaSetahun")
+#Bagian K-Means
+set.seed(100)
+#fungsi kmeans untuk membentuk 5 cluster dengan 25 skenario random dan simpan ke dalam variable segmentasi
+segmentasi <- kmeans(x=pelanggan[c(field_yang_digunakan)], centers=5, nstart=25)
+#tampilkan hasil k-means
+segmentasi
+#Penggabungan hasil cluster
+
+segmentasi$cluster
+
+pelanggan$cluster <- segmentasi$cluster
+
+str(pelanggan)
+
+#Analisa hasil
+#Filter cluster ke-2
+which(pelanggan$cluster == 2)
+length(which(pelanggan$cluster == 2))
+
+#Analisa hasil
+#Melihat data cluster ke-1
+pelanggan[which(pelanggan$cluster==3),]
+pelanggan[which(pelanggan$cluster==4),]
+pelanggan[which(pelanggan$cluster==5),]
+
+----------------------- Analisa Hasil Means
+#Bagian Data Preparation
+pelanggan <- read.csv("https://academy.dqlab.id/dataset/customer_segments.txt", sep="\t")
+pelanggan_matrix <- data.matrix(pelanggan[c("Jenis.Kelamin", "Profesi", "Tipe.Residen")])
+pelanggan <- data.frame(pelanggan, pelanggan_matrix)
+Profesi <- unique(pelanggan[c("Profesi","Profesi.1")])
+Jenis.Kelamin <- unique(pelanggan[c("Jenis.Kelamin","Jenis.Kelamin.1")])
+Tipe.Profesi <- unique(pelanggan[c("Tipe.Residen","Tipe.Residen.1")])
+pelanggan$NilaiBelanjaSetahun <- pelanggan$NilaiBelanjaSetahun/1000000
+field_yang_digunakan = c("Jenis.Kelamin.1", "Umur", "Profesi.1", "Tipe.Residen.1","NilaiBelanjaSetahun")
+#Bagian K-Means
+set.seed(100)
+segmentasi <- kmeans(x=pelanggan[field_yang_digunakan], centers=5, nstart=25)
+pelanggan$cluster <- segmentasi$cluster
+#Analisa hasil
+#Melihat cluster means dari objek 
+segmentasi$centers
+
+#Membandingkan dengan 2 cluster kmeans, masing-masing 2 dan 5
+set.seed(100)
+kmeans(x=pelanggan[field_yang_digunakan],centers=2, nstart=25)
+set.seed(100)
+kmeans(x=pelanggan[field_yang_digunakan],centers=5, nstart=25)
+
+-------------------Available Components
+segmentasi$withinss
+segmentasi$cluster
+segmentasi$tot.withinss

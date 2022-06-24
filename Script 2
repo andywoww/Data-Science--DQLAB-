@@ -1,0 +1,54 @@
+------------- Estimasi Nilai Sebaran Data Range ----------------
+max(data_intro$Jumlah)-min(data_intro$Jumlah)
+
+------------------- Estimasi Nilai Sebaran Data Varians ----------
+var(data_intro$Pendapatan)
+
+
+----------------- Estimasi Nilai Sebaran Data Simpangan Baku 
+## Carilah simpangan baku untuk kolom Pendapatan dari variable data_intro
+sd(data_intro$Pendapatan)
+
+----- Analisis Deskriptif Menggunakan Nilai Statistik
+## carilah summary data dari data_intro
+summary(data_intro)
+
+------ Analisis Deskriptif Menggunakan Visualisasi
+## Carilah sebaran data kolom Jenis.Kelamin dari variable data_intro
+plot(data_intro$Jenis.Kelamin)
+  
+## Carilah sebaran data dari Pendapatan dari variable data_intro
+hist(data_intro$Pendapatan)
+
+## Carilah sebaran data dari Produk dari variable data_intro
+plot(data_intro$Produk)
+
+## Carilah sebaran data dari Harga dari variable data_intro
+hist(data_intro$Harga)
+
+## Carilah sebaran data dari Jumlah dari variable data_intro
+hist(data_intro$Jumlah)
+
+## Carilah sebaran data dari Total dari variable data_intro
+hist(data_intro$Total)
+
+## Carilah sebaran data dari Tingkat.Kepuasan dari variable data_intro
+plot(data_intro$Tingkat.Kepuasan)
+
+------------- Scatter Plot
+plot(data_intro$Pendapatan,data_intro$Total)
+
+------------- Hubungan Pendapatan dengan Total Belanja dengan cor.test
+cor.test(data_intro$Pendapatan,data_intro$Total)
+
+------------- Hubungan Produk dengan Tingkat Kepuasan dengan chisq.test
+table(data_intro$Produk,data_intro$Tingkat.Kepuasan)
+chisq.test(table(data_intro$Produk,data_intro$Tingkat.Kepuasan))
+
+------------- Hubungan Jenis Kelamin dengan Total Belanja dengan t.test
+## carilah boxplot antara variabel jenis kelamin dengan total belanja
+boxplot(Total~Jenis.Kelamin,data = data_intro)
+
+## analisis bagaimana hubungan jenis kelamin dengan total belanja mengunakan uji statistik t-test
+t.test(Total~Jenis.Kelamin,data = data_intro)
+
